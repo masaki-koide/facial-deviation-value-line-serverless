@@ -25,7 +25,8 @@ module.exports.webhook = (event, context, callback) => {
 		body: JSON.stringify({}),
 	}
 	context.callbackWaitsForEmptyEventLoop = false
-	
+    
+    // TODO:ネストが深いのでasync/awaitでやる
 	// 署名が有効なものか検証する
 	if (isValidSignature(event.headers['X-Line-Signature'], body)) {
 		events.forEach(event => {
