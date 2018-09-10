@@ -20,60 +20,66 @@ module.exports.webhook = (event, context, callback) => {
     const body = JSON.parse(event.body)
     const events = body.events
 
-    const response = {
-        statusCode: 200,
-        body: JSON.stringify({}),
-    }
-    ontext.callbackWaitsForEmptyEventLoop = false
+    context.callbackWaitsForEmptyEventLoop = false
 
-    // TODO:ネストが深いのでasync/awaitでやる
     // 署名が有効なものか検証する
     if (isValidSignature(event.headers['X-Line-Signature'], body)) {
-        events.forEach(event => {
-            // 画像が送信されてきた場合
-            if (event.type === 'message' && event.message.type === 'image') {
-                // 送信された画像をbase64形式で取得
-                getContentEncodedInBase64(event.message.id)
-                    .then(content => {
-                        // 画像から顔を検出する
-                        return detectFace(content)
-                    })
-                    .then(faces => {
-                        let messages
-                        // 画像から顔を検出できなかった場合
-                        if (faces.length === 0) {
-                            messages = createErrorMessage('写真から顔を検出できませんでした。')
-                        // 返信できるメッセージが5つまでのため
-                        } else if (faces.length > 5) {
-                            messages = createErrorMessage('写真から6人以上の顔を検出しました。診断できるのは5人までです。')
-                        } else {
-                            //　顔の検出結果をメッセージオブジェクトに変換
-                            messages = createFacesAnalysisResultMessages(faces)
-                        }
+        reply(events, callback)
+    }
+}
 
-                        // 返信する
-                        replyMessages(event.replyToken, messages)
-                    })
-                    .catch(error => {
-                        console.log('Error: ', error)
-                        const messages = createErrorMessage('エラーが発生しました。しばらく待ってもう一度やり直してください。')
-                        replyMessages(event.replyToken, messages)
-                    })
-            // フォローもしくはフォロー解除された場合
-            } else if (event.type === 'follow' || event.type === 'unfollow') {
-                const userId = event.source.userId
-                const isFollowEvent = event.type === 'follow'
-                // イベントループを終了させる(finallyが使えないのでthenとcatch両方で)
-                updateUser(userId, isFollowEvent)
-                    .then(() => { callback(null, response) })
-                    .catch(() => { callback(null, response) })
-            // その他のイベントはエラーメッセージで返す
-            } else {
-                const messages = createErrorMessage('診断したい写真を送ってね！')
+/**
+ * 返信する
+ * @param {Array} events イベント
+ * @param {Function} callback コールバック
+ */
+function reply(events, callback) {
+    events.forEach(async event => {
+        // 画像が送信されてきた場合
+        if (event.type === 'message' && event.message.type === 'image') {
+            try {
+                // 送信された画像をbase64形式で取得
+                const content = await getContentEncodedInBase64(event.message.id)
+                // 画像から顔を検出する
+                const faces = await detectFace(content)
+
+                let messages
+                // 画像から顔を検出できなかった場合
+                if (faces.length === 0) {
+                    messages = createErrorMessage('写真から顔を検出できませんでした。')
+                // 返信できるメッセージが5つまでのため
+                } else if (faces.length > 5) {
+                    messages = createErrorMessage('写真から6人以上の顔を検出しました。診断できるのは5人までです。')
+                } else {
+                    //　顔の検出結果をメッセージオブジェクトに変換
+                    messages = createFacesAnalysisResultMessages(faces)
+                }
+
+                // 返信する
+                replyMessages(event.replyToken, messages)
+            } catch (error) {
+                console.log(error)
+                const messages = createErrorMessage('エラーが発生しました。しばらく待ってもう一度やり直してください。')
                 replyMessages(event.replyToken, messages)
             }
-        })
-    }
+        // フォローもしくはフォロー解除された場合
+        } else if (event.type === 'follow' || event.type === 'unfollow') {
+            const userId = event.source.userId
+            const isFollowEvent = event.type === 'follow'
+            const response = {
+                statusCode: 200,
+                body: JSON.stringify({}),
+            }
+            // イベントループを終了させる(finallyが使えないのでthenとcatch両方で)
+            updateUser(userId, isFollowEvent)
+                .then(() => { callback(null, response) })
+                .catch(() => { callback(null, response) })
+        // その他のイベントはエラーメッセージで返す
+        } else {
+            const messages = createErrorMessage('診断したい写真を送ってね！')
+            replyMessages(event.replyToken, messages)
+        }
+    })
 }
 
 /**
