@@ -175,9 +175,14 @@ function createFacesAnalysisResultMessages (faces) {
         const age = attr.age.value
         const gender = attr.gender.value === 'Male' ? '男性' : '女性'
         const beauty = gender === '男性' ? attr.beauty.male_score : attr.beauty.female_score
+        // 見づらいがタブを入れないためには仕方ない
+        const text = `${faces.length > 1 ? `左から${index + 1}人目\n` : ''}年齢: ${age}歳
+性別: ${gender}
+顔面偏差値: ${Math.round(beauty)}点(100点満点)`
+
         return {
             'type': 'text',
-            'text': `${faces.length > 1 ? `左から${index + 1}人目\n`　: ''}年齢:${age}歳\n性別:${gender}\n顔面偏差値:${Math.round(beauty)}点(100点満点)`
+            'text': text
         }
     })
 }
