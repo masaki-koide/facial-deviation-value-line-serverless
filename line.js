@@ -91,7 +91,10 @@ function reply(events, callback) {
  * @returns {Boolean} 有効な署名だったらtrueを返す
  */
 function isValidSignature(signature, body) {
-    return signature === crypto.createHmac('SHA256', process.env.lineChannelSecret).update(Buffer.from(JSON.stringify(body))).digest('base64');
+    return signature === crypto
+        .createHmac('SHA256', process.env.lineChannelSecret)
+        .update(Buffer.from(JSON.stringify(body)))
+        .digest('base64');
 }
 
 /**
