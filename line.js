@@ -117,10 +117,9 @@ function getContentEncodedInBase64(messageId) {
             // base64形式にエンコード
             return response.toString('base64')
         })
-        .catch(error => {
-            console.log('Error getContent(): ', error)
-
-            return Promise.reject(new Error(error))
+        .catch(err => {
+            console.log(err)
+            return Promise.reject(new Error(err))
         })
 }
 
@@ -150,10 +149,9 @@ function detectFace (image) {
 
             return response.faces
         })
-        .catch(error => {
-            console.log('Error detectFace(): ', error)
-
-            return Promise.reject(new Error(error))
+        .catch(err => {
+            console.log(err)
+            return Promise.reject(new Error(err))
         })
 }
 
@@ -218,14 +216,11 @@ function replyMessages (replyToken, messages) {
 
     return request(options)
         .then(response => {
-            console.log('Success')
-
             return
         })
-        .catch(error => {
-            console.log('Error replyMessages(): ', error)
-
-            return Promise.reject(new Error(error))
+        .catch(err => {
+            console.log(err)
+            return Promise.reject(new Error(err))
         })
 }
 
@@ -241,9 +236,8 @@ function updateUser(userId, isFollowEvent) {
     return userRef.update({
         isBlocked: !isFollowEvent,
         timestamp: firebase.database.ServerValue.TIMESTAMP
-    }).catch(error => {
-        console.log('Error updateUser(): ', error)
-
-        return Promise.reject(new Error(error))
+    }).catch(err => {
+        console.log(err)
+        return Promise.reject(new Error(err))
     })
 }
