@@ -37,13 +37,13 @@ function reply(events, callback) {
     events.forEach(async event => {
         // 画像が送信されてきた場合
         if (event.type === 'message' && event.message.type === 'image') {
+            let messages
             try {
                 // 送信された画像をbase64形式で取得
                 const content = await getContentEncodedInBase64(event.message.id)
                 // 画像から顔を検出する
                 const faces = await detectFace(content)
 
-                let messages
                 // 画像から顔を検出できなかった場合
                 if (faces.length === 0) {
                     messages = createErrorMessage('写真から顔を検出できませんでした。')
@@ -54,12 +54,10 @@ function reply(events, callback) {
                     //　顔の検出結果をメッセージオブジェクトに変換
                     messages = createFacesAnalysisResultMessages(faces)
                 }
-
-                // 返信する
-                replyMessages(event.replyToken, messages)
-            } catch (error) {
-                console.log(error)
-                const messages = createErrorMessage('エラーが発生しました。しばらく待ってもう一度やり直してください。')
+            } catch (err) {
+                console.log(err)
+                messages = createErrorMessage('エラーが発生しました。しばらく待ってもう一度やり直してください。')
+            } finally {
                 replyMessages(event.replyToken, messages)
             }
         // フォローもしくはフォロー解除された場合
@@ -70,10 +68,15 @@ function reply(events, callback) {
                 statusCode: 200,
                 body: JSON.stringify({}),
             }
-            // イベントループを終了させる(finallyが使えないのでthenとcatch両方で)
-            updateUser(userId, isFollowEvent)
-                .then(() => { callback(null, response) })
-                .catch(() => { callback(null, response) })
+
+            try {
+                await updateUser(userId, isFollowEvent)
+            } catch (err) {
+                console.log(err)
+            } finally {
+                // イベントループを終了させる
+                callback(null, response)
+            }
         // その他のイベントはエラーメッセージで返す
         } else {
             const messages = createErrorMessage('診断したい写真を送ってね！')
