@@ -18,13 +18,12 @@ const faceDetectUri = 'https://api-us.faceplusplus.com/facepp/v3/detect'
 
 module.exports.webhook = (event, context, callback) => {
     const body = JSON.parse(event.body)
-    const events = body.events
 
     context.callbackWaitsForEmptyEventLoop = false
 
     // 署名が有効なものか検証する
     if (isValidSignature(event.headers['X-Line-Signature'], body)) {
-        reply(events, callback)
+        reply(body.events, callback)
     }
 }
 
