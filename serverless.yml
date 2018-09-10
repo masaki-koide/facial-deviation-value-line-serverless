@@ -13,9 +13,7 @@
 
 service: line-bot
 
-# You can pin your service to only deploy with a specific Serverless version
-# Check out our docs for more details
-frameworkVersion: "=1.29.2"
+frameworkVersion: "=1.30.3"
 
 provider:
   name: aws
