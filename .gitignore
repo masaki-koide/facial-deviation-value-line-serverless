@@ -7,3 +7,4 @@ jspm_packages
 
 conf
 serviceAccountKey.json
+.vscode
