@@ -50,7 +50,7 @@ function reply(events, callback) {
                 } else if (faces.length > 5) {
                     messages = createErrorMessage('写真から6人以上の顔を検出しました。診断できるのは5人までです。')
                 } else {
-                    //　顔の検出結果をメッセージオブジェクトに変換
+                    // 顔の検出結果をメッセージオブジェクトに変換
                     messages = createFacesAnalysisResultMessages(faces)
                 }
             } catch (err) {
@@ -94,7 +94,7 @@ function isValidSignature(signature, body) {
     return signature === crypto
         .createHmac('SHA256', process.env.lineChannelSecret)
         .update(Buffer.from(JSON.stringify(body)))
-        .digest('base64');
+        .digest('base64')
 }
 
 /**
@@ -220,7 +220,7 @@ function replyMessages (replyToken, messages) {
     }
 
     return request(options)
-        .then(response => {
+        .then(() => {
             return
         })
         .catch(err => {
